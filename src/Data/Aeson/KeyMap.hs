@@ -25,6 +25,12 @@ module Data.Aeson.KeyMap (
     -- ** Insertion
     insert,
 
+    -- * Deletion
+    delete,
+
+    -- * Update
+    alterF,
+
     -- * Combine
     difference,
     union,
@@ -49,6 +55,8 @@ module Data.Aeson.KeyMap (
     fromMap,
     toMap,
     coercionToMap,
+    fromHashMapText,
+    toHashMapText,
 
     -- * Traversal
     -- ** Map
@@ -84,20 +92,24 @@ import Prelude (Show, showsPrec, showParen, shows, showString)
 import Control.Applicative (Applicative)
 import Control.DeepSeq (NFData(..))
 import Data.Aeson.Key (Key)
+import Data.Bifunctor (first)
 import Data.Data (Data)
 import Data.Hashable (Hashable(..))
 import Data.HashMap.Strict (HashMap)
 import Data.Map (Map)
 import Data.Monoid (Monoid(mempty, mappend))
 import Data.Semigroup (Semigroup((<>)))
+import Data.Text (Text)
 import Data.These (These (..))
 import Data.Type.Coercion (Coercion (..))
 import Data.Typeable (Typeable)
 import Text.Read (Read (..), Lexeme(..), readListPrecDefault, prec, lexP, parens)
 
+import qualified Data.Aeson.Key as Key
 import qualified Data.Foldable as F
 import qualified Data.Traversable as T
 import qualified Data.HashMap.Strict as H
+import qualified Data.List as L
 import qualified Data.Map.Strict as M
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified Data.Foldable.WithIndex    as WI (FoldableWithIndex (..))
@@ -137,6 +149,25 @@ singleton k v = KeyMap (M.singleton k v)
 -- | Is the key a member of the map?
 member :: Key -> KeyMap a -> Bool
 member t (KeyMap m) = M.member t m
+
+-- | Remove the mapping for the specified key from this map if present.
+delete :: Key -> KeyMap v -> KeyMap v
+delete k (KeyMap m) = KeyMap (M.delete k m)
+
+-- | 'alterF' can be used to insert, delete, or update a value in a map.
+alterF :: Functor f => (Maybe v -> f (Maybe v)) -> Key -> KeyMap v -> f (KeyMap v)
+#if MIN_VERSION_containers(0,5,8)
+alterF f k = fmap KeyMap . M.alterF f k . unKeyMap
+#else
+alterF f k m = fmap g (f mv) where
+    g r =  case r of
+        Nothing -> case mv of
+            Nothing -> m
+            Just _  -> delete k m
+        Just v' -> insert k v' m
+
+    mv = lookup k m
+#endif
 
 -- | Return the value to which the specified key is mapped,
 -- or Nothing if this map contains no mapping for the key.
@@ -325,6 +356,14 @@ singleton k v = KeyMap (H.singleton k v)
 member :: Key -> KeyMap a -> Bool
 member t (KeyMap m) = H.member t m
 
+-- | Remove the mapping for the specified key from this map if present.
+delete :: Key -> KeyMap v -> KeyMap v
+delete k (KeyMap m) = KeyMap (H.delete k m)
+
+-- | 'alterF' can be used to insert, delete, or update a value in a map.
+alterF :: Functor f => (Maybe v -> f (Maybe v)) -> Key -> KeyMap v -> f (KeyMap v)
+alterF f k = fmap KeyMap . H.alterF f k . unKeyMap
+
 -- | Return the value to which the specified key is mapped,
 -- or Nothing if this map contains no mapping for the key.
 lookup :: Key -> KeyMap v -> Maybe v
@@ -491,6 +530,14 @@ alignWith f (KeyMap x) (KeyMap y) = KeyMap (SA.alignWith f x y)
 -- | Generalized union with combining function.
 alignWithKey :: (Key -> These a b -> c) -> KeyMap a -> KeyMap b -> KeyMap c
 alignWithKey f (KeyMap x) (KeyMap y) = KeyMap (SAI.ialignWith f x y)
+
+-- | Convert a 'KeyMap' to a @'HashMap' 'Text'@.
+toHashMapText :: KeyMap v -> HashMap Text  v
+toHashMapText = H.fromList . L.map (first Key.toText) . toList
+
+-- | Convert a @'HashMap' 'Text'@to a 'KeyMap'.
+fromHashMapText :: HashMap Text v -> KeyMap v
+fromHashMapText = fromList . L.map (first Key.fromText) . H.toList
 
 -------------------------------------------------------------------------------
 -- Instances
