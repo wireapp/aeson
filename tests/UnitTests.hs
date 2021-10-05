@@ -282,7 +282,7 @@ fromJSONKeyAssertions =
 
 #if __GLASGOW_HASKELL__ >= 710
     , assertIsCoerce' "MyText'"         (fromJSONKey :: FromJSONKeyFunction MyText')
-    , assertIsCoerce  "Const Text"      (fromJSONKey :: FromJSONKeyFunction (Const Text ()))
+    , assertIsCoerce  "Const Text"      (fromJSONKey :: FromJSONKeyFunction (Const Text ())) -- this case fails when compiling with `-O0`.
 #endif
     ]
   where
