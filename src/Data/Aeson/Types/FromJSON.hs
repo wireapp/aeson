@@ -82,7 +82,6 @@ import Prelude.Compat
 
 import Control.Applicative ((<|>), Const(..), liftA2)
 import Control.Monad (zipWithM)
-import Data.Aeson.Internal.Functions (mapKey)
 import Data.Aeson.Parser.Internal (eitherDecodeWith, jsonEOF)
 import Data.Aeson.Types.Generic
 import Data.Aeson.Types.Internal
@@ -93,7 +92,6 @@ import Data.Functor.Identity (Identity(..))
 import Data.Functor.Product (Product(..))
 import Data.Functor.Sum (Sum(..))
 import Data.Functor.These (These1 (..))
-import Data.Hashable (Hashable(..))
 import Data.Int (Int16, Int32, Int64, Int8)
 import Data.List.NonEmpty (NonEmpty(..))
 import Data.Maybe (fromMaybe)
@@ -120,7 +118,6 @@ import Foreign.C.Types (CTime (..))
 import GHC.Generics
 import Numeric.Natural (Natural)
 import Text.ParserCombinators.ReadP (readP_to_S)
-import Unsafe.Coerce (unsafeCoerce)
 import qualified Data.Aeson.Parser.Time as Time
 import qualified Data.Aeson.Key as Key
 import qualified Data.Aeson.KeyMap as KM
@@ -131,8 +128,6 @@ import qualified Data.DList as DList
 import qualified Data.DList.DNonEmpty as DNE
 #endif
 import qualified Data.Fix as F
-import qualified Data.HashMap.Strict as H
-import qualified Data.HashSet as HashSet
 import qualified Data.IntMap as IntMap
 import qualified Data.IntSet as IntSet
 import qualified Data.Map as M
@@ -388,7 +383,7 @@ class FromJSON a where
 --   the recommended way to define instances is with generalized newtype deriving:
 --
 --   > newtype SomeId = SomeId { getSomeId :: Text }
---   >   deriving (Eq,Ord,Hashable,FromJSONKey)
+--   >   deriving (Eq,Ord,FromJSONKey)
 --
 --   If you have a sum of nullary constructors, you may use the generic
 --   implementation:
@@ -438,11 +433,10 @@ instance Functor FromJSONKeyFunction where
     fmap h (FromJSONKeyValue f)      = FromJSONKeyValue (fmap h . f)
 
 -- | Construct 'FromJSONKeyFunction' for types coercible from 'Text'. This
--- conversion is still unsafe, as 'Hashable' and 'Eq' instances of @a@ should be
--- compatible with 'Text' i.e. hash values should be equal for wrapped values as well.
--- This property will always be maintained if the 'Hashable' and 'Eq' instances
--- are derived with generalized newtype deriving.
--- compatible with 'Text' i.e. hash values be equal for wrapped values as well.
+-- conversion is still unsafe, as the 'Eq' instance of @a@ should be
+-- compatible with 'Text'.
+-- This property will always be maintained if the 'Eq' instance
+-- is derived with generalized newtype deriving.
 --
 -- On pre GHC 7.8 this is unconstrainted function.
 fromJSONKeyCoerce ::
@@ -1910,35 +1904,6 @@ instance (VP.Prim a, FromJSON a) => FromJSON (VP.Vector a) where
 
 instance (VG.Vector VU.Vector a, FromJSON a) => FromJSON (VU.Vector a) where
     parseJSON = vectorParseJSON "Data.Vector.Unboxed.Vector"
-
--------------------------------------------------------------------------------
--- unordered-containers
--------------------------------------------------------------------------------
-
-instance (Eq a, Hashable a, FromJSON a) => FromJSON (HashSet.HashSet a) where
-    parseJSON = fmap HashSet.fromList . parseJSON
-
-
-instance (FromJSONKey k, Eq k, Hashable k) => FromJSON1 (H.HashMap k) where
-    liftParseJSON p _ = case fromJSONKey of
-        FromJSONKeyCoerce -> withObject "HashMap ~Text" $
-            uc . H.traverseWithKey (\k v -> p v <?> Key k) . KM.toHashMap
-        FromJSONKeyText f -> withObject "HashMap" $
-            fmap (mapKey (f . Key.toText)) . H.traverseWithKey (\k v -> p v <?> Key k) . KM.toHashMap
-        FromJSONKeyTextParser f -> withObject "HashMap" $
-          H.foldrWithKey
-            (\k v m -> H.insert <$> f (Key.toText k) <?> Key k <*> p v <?> Key k <*> m) (pure H.empty)
-            . KM.toHashMap
-        FromJSONKeyValue f -> withArray "Map" $ \arr ->
-            fmap H.fromList . Tr.sequence .
-                zipWith (parseIndexedJSONPair f p) [0..] . V.toList $ arr
-      where
-        -- TODO: this is unsafe
-        uc :: Parser (H.HashMap Key v) -> Parser (H.HashMap k v)
-        uc = unsafeCoerce
-
-instance (FromJSON v, FromJSONKey k, Eq k, Hashable k) => FromJSON (H.HashMap k v) where
-    parseJSON = parseJSON1
 
 -------------------------------------------------------------------------------
 -- aeson

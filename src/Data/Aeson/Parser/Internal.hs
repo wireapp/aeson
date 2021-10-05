@@ -158,7 +158,8 @@ objectValues mkObject str val = do
   -- Why use acc pattern here, you may ask? because then the underlying 'KM.fromList'
   -- implementation can make use of mutation when constructing a map. For example,
   -- 'HashMap` uses 'unsafeInsert' and it's much faster because it's doing in place
-  -- update to the 'HashMap'!
+  -- update to the 'HashMap'!  (We're using Maps now, but this pattern still works;
+  -- no need to change it.)
   loop acc = do
     k <- (str A.<?> "object key") <* skipSpace <* (char ':' A.<?> "':'")
     v <- (val A.<?> "object value") <* skipSpace
@@ -216,10 +217,10 @@ value = jsonWith (pure . KM.fromList)
 -- @
 --
 -- 'jsonLast' keeps the last occurence of each key, using
--- @'HashMap.Lazy.fromListWith' ('const' 'id')@.
+-- @'Map.Lazy.fromListWith' ('const' 'id')@.
 --
 -- @
--- 'jsonLast' = 'jsonWith' ('Right' '.' 'HashMap.Lazy.fromListWith' ('const' 'id'))
+-- 'jsonLast' = 'jsonWith' ('Right' '.' 'Map.Lazy.fromListWith' ('const' 'id'))
 -- @
 --
 -- 'jsonAccum' keeps wraps all values in arrays to keep duplicates, using

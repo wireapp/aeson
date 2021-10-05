@@ -136,7 +136,6 @@ library
       attoparsec            >=0.13.2.2 && <0.15
     , data-fix              >=0.3      && <0.4
     , dlist                 >=0.8.0.4  && <1.1
-    , hashable              >=1.2.7.0  && <1.4
     , indexed-traversable   >=0.1.1    && <0.2
     , primitive             >=0.7.0.1  && <0.8
     , scientific            >=0.3.7.0  && <0.4
@@ -145,7 +144,6 @@ library
     , tagged                >=0.8.6    && <0.9
     , th-abstraction        >=0.2.8.0  && <0.5
     , these                 >=1.1      && <1.2
-    , unordered-containers  >=0.2.10.0 && <0.3
     , uuid-types            >=1.0.3    && <1.1
     , vector                >=0.12.0.1 && <0.13
 
@@ -211,7 +209,6 @@ test-suite aeson-tests
     , filepath
     , generic-deriving      >=1.10     && <1.15
     , ghc-prim              >=0.2
-    , hashable              >=1.2.4.0
     , integer-logarithms    >=1        && <1.1
     , QuickCheck            >=2.14.2   && <2.15
     , quickcheck-instances  >=0.3.25.2 && <0.4
@@ -227,7 +224,6 @@ test-suite aeson-tests
     , these
     , time
     , time-compat
-    , unordered-containers
     , uuid-types
     , vector
 

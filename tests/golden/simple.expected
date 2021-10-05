@@ -13,9 +13,9 @@ Error in $: expected String, but encountered Number
 Error in $: expected String, but encountered Array
 Error in $: expected String, but encountered Object
 Error in $: expected String, but encountered Null
-HashMap
-Error in $: parsing HashMap failed, expected Object, but encountered String
-Error in $: parsing HashMap failed, expected Object, but encountered Array
+Map
+Error in $: parsing Map failed, expected Object, but encountered String
+Error in $: parsing Map failed, expected Object, but encountered Array
 Either
 Error in $[1].Left[1]: expected Bool, but encountered Number
 Seq

@@ -23,7 +23,7 @@ import Types
 import qualified Data.Aeson.Key as Key
 import qualified Data.DList as DList
 import qualified Data.Vector as V
-import qualified Data.HashMap.Strict as HM
+import qualified Data.Map.Strict as M
 
 
 import Data.Orphans ()
@@ -60,8 +60,8 @@ instance ApproxEq Double where
       | isNaN a && isNaN b = True
       | otherwise          = approxEq a b
 
-instance (ApproxEq k, Eq v) => ApproxEq (HM.HashMap k v) where
-    a =~ b = and $ zipWith eq (HM.toList a) (HM.toList b)
+instance (ApproxEq k, Eq v) => ApproxEq (M.Map k v) where
+    a =~ b = and $ zipWith eq (M.toList a) (M.toList b)
       where
         eq (x,y) (u,v) = x =~ u && y == v
 

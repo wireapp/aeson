@@ -93,7 +93,6 @@ import Data.Char (isLower, isUpper, toLower, isAlpha, isAlphaNum)
 import Data.Aeson.Key (Key)
 import Data.Data (Data)
 import Data.Foldable (foldl')
-import Data.Hashable (Hashable(..))
 import Data.List (intercalate)
 import Data.Scientific (Scientific)
 import Data.String (IsString(..))
@@ -393,7 +392,7 @@ instance Show Value where
 -- The ordering is total, consistent with 'Eq' instance.
 -- However, nothing else about the ordering is specified,
 -- and it may change from environment to environment and version to version
--- of either this package or its dependencies ('hashable' and 'unordered-containers').
+-- of this package.
 --
 -- @since 1.5.2.0
 deriving instance Ord Value
@@ -423,18 +422,6 @@ instance NFData Value where
 instance IsString Value where
     fromString = String . pack
     {-# INLINE fromString #-}
-
-hashValue :: Int -> Value -> Int
-hashValue s (Object o)   = s `hashWithSalt` (0::Int) `hashWithSalt` o
-hashValue s (Array a)    = foldl' hashWithSalt
-                              (s `hashWithSalt` (1::Int)) a
-hashValue s (String str) = s `hashWithSalt` (2::Int) `hashWithSalt` str
-hashValue s (Number n)   = s `hashWithSalt` (3::Int) `hashWithSalt` n
-hashValue s (Bool b)     = s `hashWithSalt` (4::Int) `hashWithSalt` b
-hashValue s Null         = s `hashWithSalt` (5::Int)
-
-instance Hashable Value where
-    hashWithSalt = hashValue
 
 -- | @since 0.11.0.0
 instance TH.Lift Value where

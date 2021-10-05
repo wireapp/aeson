@@ -15,14 +15,13 @@ import Data.Aeson.Parser (eitherDecodeWith)
 import Data.Aeson.Internal (formatError, iparse)
 import Data.Algorithm.Diff (PolyDiff (..), getGroupedDiff)
 import Data.Proxy (Proxy(..))
-import Data.Semigroup ((<>))
 import Data.Sequence (Seq)
 import Instances ()
 import Numeric.Natural (Natural)
 import Test.Tasty (TestTree, TestName)
 import Test.Tasty.Golden.Advanced (goldenTest)
 import qualified Data.ByteString.Lazy.Char8 as L
-import qualified Data.HashMap.Strict as HM
+import qualified Data.Map.Strict as M
 
 import Encoders
 import Types
@@ -59,7 +58,7 @@ output = concat
       , "null"
       ]
 
-  , testFor "HashMap" (Proxy :: Proxy (HM.HashMap String Int))
+  , testFor "Map" (Proxy :: Proxy (M.Map String Int))
       [ "\"\""
       , "[]"
       ]

@@ -23,7 +23,6 @@ import Prelude (Eq, Ord, (.), Show (..), String)
 import Control.Applicative ((<$>))
 import Control.DeepSeq (NFData(..))
 import Data.Data (Data)
-import Data.Hashable (Hashable(..))
 import Data.Monoid (Monoid(mempty, mappend))
 import Data.Semigroup (Semigroup((<>)))
 import Data.Text (Text)
@@ -61,9 +60,6 @@ instance Show Key where
 
 instance Data.String.IsString Key where
     fromString = fromString
-
-instance Hashable Key where
-    hashWithSalt salt (Key k) = hashWithSalt salt k
 
 instance NFData Key where
     rnf (Key k) = rnf k

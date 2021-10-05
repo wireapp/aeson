@@ -44,8 +44,6 @@ import Test.Tasty.HUnit (assertFailure, assertEqual, testCase)
 import Types (Approx(..), Compose3, Compose3', I)
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.DList as DList
-import qualified Data.HashMap.Strict as HM
-import qualified Data.HashSet as HashSet
 import qualified Data.IntMap as IntMap
 import qualified Data.IntSet as IntSet
 import qualified Data.Map as M
@@ -89,9 +87,6 @@ jsonExamples =
   , example "DList" "[1,2,3]"  (DList.fromList [1, 2, 3] :: DList.DList Int)
   , example "()" "[]"  ()
 
-  , ndExample "HashMap Int Int"
-        [ "{\"0\":1,\"2\":3}", "{\"2\":3,\"0\":1}"]
-        (HM.fromList [(0,1),(2,3)] :: HM.HashMap Int Int)
   , ndExample "Map Int Int"
         [ "{\"0\":1,\"2\":3}", "{\"2\":3,\"0\":1}"]
         (M.fromList [(0,1),(2,3)] :: M.Map Int Int)
@@ -125,13 +120,7 @@ jsonExamples =
   , example "IntSet"  "[1,2,3]" (IntSet.fromList [3, 2, 1])
   , example "IntMap" "[[1,2],[3,4]]" (IntMap.fromList [(3,4), (1,2)] :: IntMap.IntMap Int)
   , example "Vector" "[1,2,3]" (Vector.fromList [1, 2, 3] :: Vector.Vector Int)
-  , example "HashSet Int" "[1,2,3]" (HashSet.fromList [3, 2, 1] :: HashSet.HashSet Int)
   , example "Tree Int" "[1,[[2,[[3,[]],[4,[]]]],[5,[]]]]" (let n = Tree.Node in n 1 [n 2 [n 3 [], n 4 []], n 5 []] :: Tree.Tree Int)
-
-  -- Three separate cases, as ordering in HashMap is not defined
-  , example "HashMap Float Int, NaN" "{\"NaN\":1}"  (Approx $ HM.singleton (0/0) 1 :: Approx (HM.HashMap Float Int))
-  , example "HashMap Float Int, Infinity" "{\"Infinity\":1}"  (HM.singleton (1/0) 1 :: HM.HashMap Float Int)
-  , example "HashMap Float Int, +Infinity" "{\"-Infinity\":1}"  (HM.singleton (negate 1/0) 1 :: HM.HashMap Float Int)
 
   -- Functors
   , example "Identity Int" "1"  (pure 1 :: Identity Int)
@@ -340,4 +329,3 @@ assertSomeEqual preface expected actual
     | otherwise = assertFailure $ preface
         ++ ": expecting one of " ++ show (toList expected)
         ++ ", got " ++ show actual
-

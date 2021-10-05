@@ -14,8 +14,6 @@ import Data.Aeson.Parser (value)
 import Data.Aeson.Types
 import qualified Data.Aeson.Key as Key
 import qualified Data.Aeson.KeyMap as KM
-import Data.HashMap.Strict (HashMap)
-import Data.Hashable (Hashable)
 import Data.Int (Int8)
 import Data.Map (Map)
 import Data.Time (ZonedTime)
@@ -26,7 +24,6 @@ import Types
 import Text.Read (readMaybe)
 import qualified Data.Attoparsec.Lazy as L
 import qualified Data.ByteString.Lazy.Char8 as L
-import qualified Data.HashMap.Strict as H
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.Vector as V
@@ -80,11 +77,11 @@ roundTripEq x y = roundTripEnc (===) x y .&&. roundTripNoEnc (===) x y
 roundtripReadShow :: Value -> Property
 roundtripReadShow v = readMaybe (show v) === Just v
 
--- We test keys by encoding HashMap and Map with it
+-- We test keys by encoding Map with it
 roundTripKey
-    :: (Ord a, Hashable a, FromJSONKey a, ToJSONKey a, Show a)
-    => a -> HashMap a Int -> Map a Int -> Property
-roundTripKey _ h m = roundTripEq h h .&&. roundTripEq m m
+    :: (Ord a, FromJSONKey a, ToJSONKey a, Show a)
+    => a -> Map a Int -> Property
+roundTripKey _ m = roundTripEq m m
 
 infix 4 ==~
 (==~) :: (ApproxEq a, Show a) => a -> a -> Property
@@ -128,8 +125,9 @@ parserCatchErrorProp path msg =
     jsonPath = map (I.Key . Key.fromString) path
 
 -- | Perform a structural comparison of the results of two encoding
--- methods. Compares decoded values to account for HashMap-driven
--- variation in JSON object key ordering.
+-- methods. Compares decoded values for historical reasons (it used to
+-- account for HashMap-driven variation in JSON object key ordering,
+-- but now HashMaps are Maps).
 sameAs :: (a -> Value) -> (a -> Encoding) -> a -> Property
 sameAs toVal toEnc v =
   counterexample (show s) $

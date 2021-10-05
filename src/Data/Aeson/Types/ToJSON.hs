@@ -63,7 +63,7 @@ import Control.Applicative (Const(..))
 import Control.Monad.ST (ST)
 import Data.Aeson.Encoding (Encoding, Encoding', Series, dict, emptyArray_)
 import Data.Aeson.Encoding.Internal ((>*<))
-import Data.Aeson.Internal.Functions (mapTextKeyVal, mapKeyVal)
+import Data.Aeson.Internal.Functions (mapTextKeyVal)
 import Data.Aeson.Types.Generic (AllNullary, False, IsRecord, One, ProductSize, Tagged2(..), True, Zero, productSize)
 import Data.Aeson.Types.Internal
 import qualified Data.Aeson.Key as Key
@@ -111,8 +111,6 @@ import qualified Data.DList as DList
 import qualified Data.DList.DNonEmpty as DNE
 #endif
 import qualified Data.Fix as F
-import qualified Data.HashMap.Strict as H
-import qualified Data.HashSet as HashSet
 import qualified Data.IntMap as IntMap
 import qualified Data.IntSet as IntSet
 import qualified Data.List.NonEmpty as NE
@@ -349,7 +347,7 @@ instance KeyValue Object where
 -------------------------------------------------------------------------------
 
 -- | Typeclass for types that can be used as the key of a map-like container
---   (like 'Map' or 'HashMap'). For example, since 'Text' has a 'ToJSONKey'
+--   (like 'Map'). For example, since 'Text' has a 'ToJSONKey'
 --   instance and 'Char' has a 'ToJSON' instance, we can encode a value of
 --   type 'Map' 'Text' 'Char':
 --
@@ -1723,36 +1721,6 @@ instance (VP.Prim a, ToJSON a) => ToJSON (VP.Vector a) where
 instance (VG.Vector VU.Vector a, ToJSON a) => ToJSON (VU.Vector a) where
     toJSON = vectorToJSON
     toEncoding = encodeVector
-
--------------------------------------------------------------------------------
--- unordered-containers
--------------------------------------------------------------------------------
-
-instance ToJSON1 HashSet.HashSet where
-    liftToJSON t _ = listValue t . HashSet.toList
-    liftToEncoding t _ = listEncoding t . HashSet.toList
-
-instance (ToJSON a) => ToJSON (HashSet.HashSet a) where
-    toJSON = toJSON1
-    toEncoding = toEncoding1
-
-
-instance ToJSONKey k => ToJSON1 (H.HashMap k) where
-    liftToJSON g _ = case toJSONKey of
-        ToJSONKeyText f _ -> Object . TM.fromHashMap . mapKeyVal f g
-        ToJSONKeyValue f _
-          -> Array . V.fromList . map (toJSONPair f g) . H.toList
-
-    -- liftToEncoding :: forall a. (a -> Encoding) -> ([a] -> Encoding) -> TM.HashMap k a -> Encoding
-    liftToEncoding g _ = case toJSONKey of
-        ToJSONKeyText _ f -> dict f g H.foldrWithKey
-        ToJSONKeyValue _ f -> listEncoding (pairEncoding f) . H.toList
-      where
-        pairEncoding f (a, b) = E.list id [f a, g b]
-
-instance (ToJSON v, ToJSONKey k) => ToJSON (H.HashMap k v) where
-    toJSON = toJSON1
-    toEncoding = toEncoding1
 
 -------------------------------------------------------------------------------
 -- Data.Aeson.KeyMap

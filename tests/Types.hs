@@ -17,7 +17,6 @@ import Control.Applicative ((<$>))
 import Data.Data
 import Data.Functor.Compose (Compose (..))
 import Data.Functor.Identity (Identity (..))
-import Data.Hashable (Hashable (..))
 import Data.Semigroup (Option)
 import Data.Text
 import Data.Time (Day (..), fromGregorian)
@@ -146,9 +145,6 @@ instance FromJSON BCEDay where
 -- | Scale the size of Arbitrary with ''
 newtype LogScaled a = LogScaled { getLogScaled :: a }
   deriving (Eq, Ord, Show)
-
-instance Hashable a => Hashable (LogScaled a) where
-    hashWithSalt salt (LogScaled a) = hashWithSalt salt a
 
 instance Arbitrary a => Arbitrary (LogScaled a) where
     arbitrary = LogScaled <$> scale (\x -> intLog2 $ x + 1) arbitrary
